@@ -22,7 +22,7 @@ async def generate_and_upload_plan(request: PlanRequest):
         )
 
         # 3. 将每日训练转换为ZWO文件并准备上传
-        workouts_for_upload =
+        workouts_for_upload = []  # 修复：添加了缺失的赋值
         for daily_workout in training_plan.workouts:
             zwo_content = zwo_service.generate_zwo_file_content(daily_workout)
             workouts_for_upload.append({

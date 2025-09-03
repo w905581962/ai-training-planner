@@ -11,13 +11,20 @@ def get_athlete_data(athlete_id: str, api_key: str) -> Dict[str, Any]:
     response.raise_for_status()
     return response.json()
 
-def upload_workouts_to_intervals(athlete_id: str, api_key: str, workouts: List]):
+def upload_workouts_to_intervals(athlete_id: str, api_key: str, workouts: List[Dict[str, Any]]):  # 修复：添加了类型注解
     """将训练计划列表上传到 intervals.icu 日历。"""
     url = f"{BASE_URL}/athlete/{athlete_id}/events"
     headers = {"Content-Type": "application/json"}
     
+    uploaded_count = 0
     for workout in workouts:
-        response = requests.post(url, auth=("API_KEY", api_key), json=workout, headers=headers)
-        response.raise_for_status()
+        try:
+            response = requests.post(url, auth=("API_KEY", api_key), json=workout, headers=headers)
+            response.raise_for_status()
+            uploaded_count += 1
+        except requests.exceptions.RequestException as e:
+            print(f"上传训练失败: {workout.get('name', 'Unknown')}, 错误: {e}")
+            # 继续上传其他训练而不是完全失败
+            continue
     
-    return {"status": "success", "uploaded_count": len(workouts)}
+    return {"status": "success", "uploaded_count": uploaded_count, "total_workouts": len(workouts)}

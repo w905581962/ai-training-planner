@@ -13,18 +13,32 @@ interface WorkoutBlock {
   type: string;
   duration_seconds: number;
   power_start_percent_ftp: number;
+  power_end_percent_ftp?: number;
+  repeat?: number;
+  off_duration_seconds?: number;
+  off_power_percent_ftp?: number;
+  cadence?: number;
 }
 
 interface DailyWorkout {
   day: string;
   title: string;
   coach_notes: string;
-  blocks: WorkoutBlock;
+  blocks: WorkoutBlock[];  // 修复：添加了缺失的数组类型
 }
 
 interface TrainingPlan {
   plan_name: string;
   workouts: DailyWorkout[];
+}
+
+interface PlanRequest {
+  athlete_id: string;
+  api_key: string;
+  goal: string;
+  weeks: number;
+  days_per_week: number;
+  hours_per_week: number;
 }
 
 const PlanForm = () => {
@@ -39,8 +53,8 @@ const PlanForm = () => {
   const toast = useToast();
 
   const mutation = useMutation({
-    mutationFn: (newPlanRequest: any) => {
-      // 在生产环境中，这应该是相对路径或通过环境变量配置
+    mutationFn: (newPlanRequest: PlanRequest) => {
+      // 使用相对路径，适合生产环境
       return axios.post('/api/v1/generate-and-upload', newPlanRequest);
     },
     onSuccess: (data) => {
@@ -67,7 +81,14 @@ const PlanForm = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setGeneratedPlan(null);
-    mutation.mutate({ athlete_id: athleteId, api_key: apiKey, goal, weeks, days_per_week: daysPerWeek, hours_per_week: hoursPerWeek });
+    mutation.mutate({ 
+      athlete_id: athleteId, 
+      api_key: apiKey, 
+      goal, 
+      weeks, 
+      days_per_week: daysPerWeek, 
+      hours_per_week: hoursPerWeek 
+    });
   };
 
   return (
@@ -97,21 +118,21 @@ const PlanForm = () => {
           <SimpleGrid columns={3} spacing={4}>
             <FormControl>
               <FormLabel>周数</FormLabel>
-              <NumberInput value={weeks} onChange={(_, val) => setWeeks(val)} min={1} max={24}>
+              <NumberInput value={weeks} onChange={(_, val) => setWeeks(val || 4)} min={1} max={24}>
                 <NumberInputField />
                 <NumberInputStepper><NumberIncrementStepper /><NumberDecrementStepper /></NumberInputStepper>
               </NumberInput>
             </FormControl>
             <FormControl>
               <FormLabel>天/周</FormLabel>
-              <NumberInput value={daysPerWeek} onChange={(_, val) => setDaysPerWeek(val)} min={1} max={7}>
+              <NumberInput value={daysPerWeek} onChange={(_, val) => setDaysPerWeek(val || 3)} min={1} max={7}>
                 <NumberInputField />
                 <NumberInputStepper><NumberIncrementStepper /><NumberDecrementStepper /></NumberInputStepper>
               </NumberInput>
             </FormControl>
             <FormControl>
               <FormLabel>小时/周</FormLabel>
-              <NumberInput value={hoursPerWeek} onChange={(_, val) => setHoursPerWeek(val)} min={1} max={30}>
+              <NumberInput value={hoursPerWeek} onChange={(_, val) => setHoursPerWeek(val || 5)} min={1} max={30}>
                 <NumberInputField />
                 <NumberInputStepper><NumberIncrementStepper /><NumberDecrementStepper /></NumberInputStepper>
               </NumberInput>
@@ -147,6 +168,14 @@ const PlanForm = () => {
                   <Box>
                     <Heading size='xs' textTransform='uppercase'>教练笔记</Heading>
                     <Text pt='2' fontSize='sm'>{workout.coach_notes}</Text>
+                  </Box>
+                  <Box>
+                    <Heading size='xs' textTransform='uppercase'>训练结构</Heading>
+                    {workout.blocks.map((block, index) => (
+                      <Text key={index} pt='1' fontSize='sm'>
+                        {block.type}: {Math.round(block.duration_seconds / 60)}分钟 @ {Math.round(block.power_start_percent_ftp * 100)}% FTP
+                      </Text>
+                    ))}
                   </Box>
                 </Stack>
               </CardBody>

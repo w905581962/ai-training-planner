@@ -18,11 +18,11 @@ def generate_zwo_file_content(workout: DailyWorkout) -> str:
         # ZWO格式要求首字母大写
         block_type_zwo = block.type
         
-        if block_type_zwo in:
+        if block_type_zwo in ["Warmup", "Cooldown", "Ramp"]:  # 修复：添加了缺失的列表
             attributes = {
                 "Duration": str(block.duration_seconds),
                 "PowerLow": str(block.power_start_percent_ftp),
-                "PowerHigh": str(block.power_end_percent_ftp)
+                "PowerHigh": str(block.power_end_percent_ftp or block.power_start_percent_ftp)
             }
         elif block_type_zwo == "SteadyState":
             attributes = {
@@ -31,14 +31,14 @@ def generate_zwo_file_content(workout: DailyWorkout) -> str:
             }
         elif block_type_zwo == "IntervalsT":
             attributes = {
-                "Repeat": str(block.repeat),
+                "Repeat": str(block.repeat or 1),
                 "OnDuration": str(block.duration_seconds),
-                "OffDuration": str(block.off_duration_seconds),
+                "OffDuration": str(block.off_duration_seconds or 60),
                 "OnPower": str(block.power_start_percent_ftp),
-                "OffPower": str(block.off_power_percent_ftp)
+                "OffPower": str(block.off_power_percent_ftp or 0.5)
             }
         elif block_type_zwo == "FreeRide":
-             attributes = {
+            attributes = {
                 "Duration": str(block.duration_seconds)
             }
 

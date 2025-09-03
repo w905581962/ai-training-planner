@@ -7,10 +7,11 @@ const localizer = momentLocalizer(moment);
 interface DailyWorkout {
   day: string;
   title: string;
+  coach_notes: string;
 }
 
 interface CalendarViewProps {
-  workouts: DailyWorkout;
+  workouts: DailyWorkout[];  // 修复：添加了缺失的数组类型
 }
 
 const CalendarView = ({ workouts }: CalendarViewProps) => {
@@ -28,6 +29,8 @@ const CalendarView = ({ workouts }: CalendarViewProps) => {
         events={events}
         startAccessor="start"
         endAccessor="end"
+        defaultView="month"
+        views={['month', 'week', 'day']}
       />
     </div>
   );
